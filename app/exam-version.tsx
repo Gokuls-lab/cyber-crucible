@@ -14,7 +14,7 @@ import { supabase } from '@/lib/supabase';
 import { useExam } from './contexts/ExamContext';
 
 export default function ExamVersionScreen() {
-  const { exam, setVersion, subject, setSubject } = useExam();
+  const { exam, setVersion, setSubject } = useExam();
   const [versions, setVersions] = useState<any[]>([]);
 
   useEffect(() => {
@@ -32,7 +32,21 @@ export default function ExamVersionScreen() {
   const handleVersionSelect = async (version: any) => {
     setVersion(version);
     setSubject(null);
-    router.push('/(tabs)');
+    
+    // Check if this exam version has subjects
+    const { data: subjectLinks } = await supabase
+      .from('subject_exam_versions')
+      .select('subject_id')
+      .eq('exam_version_id', version.id)
+      .limit(1);
+
+    if (subjectLinks && subjectLinks.length > 0) {
+      // Has subjects, go to subject selection
+      router.push('/subject-selection');
+    } else {
+      // No subjects, go directly to tabs
+      router.push('/(tabs)');
+    }
   };
 
   const formatDate = (dateString: string) => {
